@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>محلل URL مبسط باستخدام Validator.js</title>
+  <!-- تضمين مكتبة Validator.js من CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/validator/13.7.0/validator.min.js"></script>
+  <style>
+    /* إعادة تعيين الأنماط الافتراضية */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      background: linear-gradient(135deg, #1e1e2f, #2d2d44);
+      font-family: Arial, sans-serif;
+      color: #f0f0f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .container {
+      background-color: #282a36;
+      padding: 30px;
+      border-radius: 10px;
+      width: 100%;
+      max-width: 600px;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 28px;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 90%;
+      padding: 12px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    button {
+      padding: 12px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #3a82f7;
+      color: #fff;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #336fd1;
+    }
+    .result {
+      margin-top: 20px;
+      background-color: #2b2b2b;
+      padding: 15px;
+      border-radius: 5px;
+      word-wrap: break-word;
+      font-size: 16px;
+    }
+    .good {
+      color: #00e676;
+    }
+    .warning {
+      color: #ffa500;
+    }
+    .danger {
+      color: #ff4d4d;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>محلل URL مبسط</h1>
+    <div class="input-group">
+      <input type="text" id="urlInput" placeholder="أدخل رابط الإنترنت هنا">
+      <button id="analyzeBtn">تحليل الرابط</button>
+    </div>
+    <div id="result" class="result"></div>
+  </div>
+
+  <script>
+    const urlInput = document.getElementById('urlInput');
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const resultDiv = document.getElementById('result');
+
+    // مجموعة كلمات مشبوهة شائعة في روابط الاصطياد أو الروابط غير الآمنة
+    const suspiciousKeywords = ['login', 'secure', 'account', 'update', 'verify', 'free', 'bonus'];
+
+    analyzeBtn.addEventListener('click', () => {
+      const urlStr = urlInput.value.trim();
+
+      if (!urlStr) {
+        resultDiv.innerHTML = '<span class="danger">الرجاء إدخال رابط صحيح.</span>';
+        return;
+      }
+
+      // استخدام Validator.js للتحقق من صحة الرابط
+      if(!validator.isURL(urlStr)) {
+        resultDiv.innerHTML = '<span class="danger">الرابط غير صالح!</span>';
+        return;
+      }
+
+      let messages = [];
+
+      // استخدام كائن URL لتحليل الرابط
+      let urlObj;
+      try {
+        urlObj = new URL(urlStr);
+      } catch (error) {
+        resultDiv.innerHTML = '<span class="danger">تعذر تحليل الرابط!</span>';
+        return;
+      }
+
+      // فحص بروتوكول الرابط
+      if(urlObj.protocol === 'https:'){
+        messages.push('<span class="good">الرابط يستخدم بروتوكول HTTPS الآمن.</span>');
+      } else {
+        messages.push('<span class="danger">الرابط لا يستخدم بروتوكول HTTPS وقد يكون غير آمن.</span>');
+      }
+
+      // فحص الكلمات المشبوهة في الرابط
+      const lowerURL = urlStr.toLowerCase();
+      let foundSuspicious = suspiciousKeywords.filter(keyword => lowerURL.includes(keyword));
+      if(foundSuspicious.length > 0) {
+        messages.push(`<span class="warning">تم الكشف عن كلمات مشبوهة: (${foundSuspicious.join(', ')}) - قد يشير ذلك إلى محاولة اصطياد.</span>`);
+      } else {
+        messages.push('<span class="good">لم يتم الكشف عن كلمات مشبوهة في الرابط.</span>');
+      }
+
+      // عرض النتائج
+      resultDiv.innerHTML = messages.join('<br><br>');
+    });
+  </script>
+</body>
+</html>
